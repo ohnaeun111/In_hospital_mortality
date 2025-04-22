@@ -24,7 +24,7 @@
     "\n",
     "    # Drop unnecessary columns\n",
     "    X_features = df.drop(['institution_id', 'patient_id', 'visit_date', 'visit_time',\n",
-    "                          'survive', 'in_hospital_deceased', 'in_hospital_survive', 'ISS'], axis=1).values\n",
+    "                          'survive', 'ISS'], axis=1).values\n",
     "    y_label = df['survive'].values\n",
     "    return X_features, y_label\n",
     "\n",
