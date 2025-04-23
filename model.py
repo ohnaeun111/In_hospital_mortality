@@ -1,38 +1,35 @@
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, BatchNormalization, Dropout
-from tensorflow.keras import losses, optimizers
-import scipy.io as sio
-import numpy as np
-from tensorflow.keras.models import load_model
-import joblib
-import os
+from tensorflow.keras import Model, optimizers
 
-def eval_model(input_data, SavePath):
-    print(f"SavePath: {SavePath}") 
-    n_folds = 5
-    all_fold_models = []
- 
-    for num_folds in range(1, n_folds + 1):
-        model_path = os.path.join(SavePath, f'model_fold{num_folds}.h5')
-        print(f"Trying to load model from: {model_path}")
-        if not os.path.exists(model_path):
-            print(f"Error: File does not exist - {model_path}")
-            continue
-        loaded_models= load_model(model_path)
-        all_fold_models.append(loaded_models)
+def define_model(input_size=149):
+    x_input = tf.keras.Input(shape=(input_size,), name='input_data')
 
-    if not all_fold_models:
-        raise FileNotFoundError("No models could be loaded. Please check the model paths.")
+    x = tf.keras.layers.Dense(units=128)(x_input)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.Dropout(rate=0.5)(x)
 
-    test_eval_probas = []
+    x = tf.keras.layers.Dense(units=64)(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.Dropout(rate=0.5)(x)
 
-    for model in all_fold_models:
-        probas = model.predict(input_data) 
-        test_eval_probas.append(probas)
+    x = tf.keras.layers.Dense(units=32)(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.Dropout(rate=0.5)(x)
 
-    final_test_proba = np.mean(test_eval_probas, axis=0)
+    x = tf.keras.layers.Dense(units=16)(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.Dropout(rate=0.5)(x)
 
-    # 최종 예측 확률 전체를 반환
-    return final_test_proba
+    x = tf.keras.layers.Dense(units=8)(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.Dropout(rate=0.5)(x)
+
+    x = tf.keras.layers.Dense(units=4, kernel_regularizer=tf.keras.regularizers.l2(0.1))(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.Dropout(rate=0.5)(x)
+
+    x_out = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
+
+    model = Model(inputs=x_input, outputs=x_out)
+    model.compile(optimizer=optimizers.Adam(learning_rate=0.003), loss='binary_crossentropy', metrics=['accuracy'])
+    return model
